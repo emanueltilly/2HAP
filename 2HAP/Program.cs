@@ -14,8 +14,8 @@ namespace FFmpegHapConverter
         {
             await RenderHeader();
 
-            // Step 1: Set FFmpeg path to MyDocuments/ffmpeg
-            string ffmpegPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "ffmpeg");
+            // Step 1: Set a cross-platform path for FFmpeg binaries
+            string ffmpegPath = GetFFmpegPath();
             Directory.CreateDirectory(ffmpegPath);
 
             // Step 2: Check if FFmpeg is already downloaded, if not, download it
@@ -26,27 +26,19 @@ namespace FFmpegHapConverter
             }
             else
             {
-                Console.WriteLine("FFmpeg is already downloaded.");
+                Console.WriteLine("FFmpeg is already downloaded and will be reused.");
             }
 
             // Set the path for FFmpeg executables
             FFmpeg.SetExecutablesPath(ffmpegPath);
 
-            // Step 3: Codec selection (1 for HAP, 2 for HAP-Q)
-            int codecSelection = 0;
-            while (codecSelection != 1 && codecSelection != 2)
-            {
-                Console.WriteLine("Choose the codec for conversion:\n\n1 - HAP\n2 - HAP-Q):");
-                int.TryParse(Console.ReadLine(), out codecSelection);
-            }
+            string codec = "hap";
 
-            string codec = codecSelection == 2 ? "hap_q" : "hap";
-
-            // Step 4: Ask user if they want to include audio
+            // Step 3: Ask user if they want to include audio
             Console.WriteLine("Do you want to include audio? (Y/N):");
             bool includeAudio = Console.ReadLine().ToUpper() == "Y";
 
-            // Step 5: Get all video files in the current directory
+            // Step 4: Get all video files in the current directory
             string currentDirectory = Directory.GetCurrentDirectory();
             string[] videoFiles = Directory.GetFiles(currentDirectory, "*.*", SearchOption.TopDirectoryOnly)
                 .Where(file => file.EndsWith(".mp4") || file.EndsWith(".mov") || file.EndsWith(".avi"))
@@ -58,15 +50,15 @@ namespace FFmpegHapConverter
                 return;
             }
 
-            // Step 6: Create output subfolder based on codec choice
-            string outputDirectory = Path.Combine(currentDirectory, codecSelection == 2 ? "HAPQ" : "HAP");
+            // Step 5: Create output subfolder based on codec choice
+            string outputDirectory = Path.Combine(currentDirectory,"HAP");
             Directory.CreateDirectory(outputDirectory);
 
-            // Step 7: Process each video file and measure time
+            // Step 6: Process each video file and measure time
             foreach (var videoFile in videoFiles)
             {
-                string outputFileName = Path.Combine(outputDirectory, Path.GetFileNameWithoutExtension(videoFile) + "_converted.mov");
-
+                string outputFileName = Path.Combine(outputDirectory, Path.GetFileNameWithoutExtension(videoFile) + ".mov");
+                Console.WriteLine(Environment.NewLine);
                 Console.WriteLine($"Processing: {Path.GetFileName(videoFile)}");
 
                 // Start timing the conversion
@@ -99,7 +91,9 @@ namespace FFmpegHapConverter
                 Console.WriteLine($"Conversion time: {elapsedTime}");
             }
 
-            Console.WriteLine("All conversions finished.");
+            Console.WriteLine("\nAll conversions finished.");
+            Console.WriteLine("Press any key to exit...");
+            Console.ReadKey();
         }
 
         static async Task RenderHeader()
@@ -108,6 +102,20 @@ namespace FFmpegHapConverter
             Console.WriteLine("");
             Console.WriteLine("Release 0.1.0.0");
             Console.WriteLine("");
+        }
+
+        private static string GetFFmpegPath()
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                // Use AppData folder for Windows
+                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ffmpeg");
+            }
+            else
+            {
+                // Use Home directory for Linux and macOS
+                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "ffmpeg");
+            }
         }
     }
 }

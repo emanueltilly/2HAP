@@ -6,7 +6,12 @@
     <RootNamespace>_2HAP</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <ApplicationIcon>2HAP.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="2HAP.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Xabe.FFmpeg" Version="5.2.6" />
